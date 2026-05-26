@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}Bibliothèque Intelligente{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <!-- Lucide icons via CDN -->
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+</head>
+
+<body>
+
+  <!-- ─── SIDEBAR ─── -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+
+      <div>
+        <div class="brand-title">BiblioIA</div>
+        <div class="brand-sub">Bibliothèque Intelligente</div>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <a href="{{ url_for('index') }}"
+        class="nav-item {% if request.endpoint in ['index','rechercher'] %}active{% endif %}">
+        <i data-lucide="library"></i>
+        <span>Catalogue</span>
+      </a>
+      <a href="{{ url_for('chatbot_page') }}"
+        class="nav-item {% if request.endpoint == 'chatbot_page' %}active{% endif %}">
+        <i data-lucide="bot"></i>
+        <span>Chatbot IA</span>
+        <span class="badge-ai">IA</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="footer-info">
+        <i data-lucide="graduation-cap"></i>
+        <span>AU 2025 – 2026</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ─── MAIN ─── -->
+  <main class="main-content">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for cat, msg in messages %}
+    <div class="toast toast-{{ cat }}">{{ msg }}</div>
+    {% endfor %}
+    {% endwith %}
+
+    {% block content %}{% endblock %}
+  </main>
+
+  <script>
+    lucide.createIcons();
+  </script>
+  {% block scripts %}{% endblock %}
+</body>
+
+</html>

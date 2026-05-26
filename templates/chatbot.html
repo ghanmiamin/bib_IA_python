@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% block title %}Chatbot IA — Bibliothèque Intelligente{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title"> Assistant IA</h1>
+    <p class="page-sub">Posez vos questions sur la bibliothèque en langage naturel</p>
+  </div>
+  <button class="btn btn-ghost" onclick="resetChat()">
+    <i data-lucide="rotate-ccw"></i> Nouvelle conversation
+  </button>
+</div>
+
+<div class="chat-layout">
+
+  <!-- ─── CHAT WINDOW ─── -->
+  <div class="chat-card">
+    <div class="chat-messages" id="chat-messages">
+
+      <!-- Message de bienvenue -->
+      <div class="chat-bubble bubble-bot">
+        <div class="bubble-avatar">🤖</div>
+        <div class="bubble-content">
+          <div class="bubble-text">
+            <p>Bonjour ! Je suis votre assistant bibliothèque. </p>
+            <p>Je peux vous aider à :</p>
+            <ul>
+              <li> Vérifier la <strong>disponibilité</strong> d'un livre</li>
+              <li> Trouver des livres par <strong>auteur ou catégorie</strong></li>
+              <li> Obtenir des <strong>recommandations</strong> personnalisées</li>
+              <li> Consulter le <strong>catalogue</strong> complet</li>
+            </ul>
+            <p>Comment puis-je vous aider ?</p>
+          </div>
+          <div class="bubble-time">Maintenant</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ─── INPUT ─── -->
+    <div class="chat-input-bar">
+      <div class="chat-input-wrap">
+        <textarea id="chat-input" class="chat-textarea" placeholder="Ex : Est-ce que Les Misérables est disponible ?"
+          rows="1" onkeydown="handleKey(event)"></textarea>
+        <button class="btn-send" id="btn-send" onclick="sendMessage()">
+          <i data-lucide="send"></i>
+        </button>
+      </div>
+      <div class="chat-hints">
+        <span>Appuyez sur <kbd>Entrée</kbd> pour envoyer · <kbd>Shift+Entrée</kbd> pour sauter une ligne</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── SUGGESTIONS PANEL ─── -->
+  <div class="suggestions-panel">
+    <h3 class="panel-title"><i data-lucide="lightbulb"></i> Questions suggérées</h3>
+    <div class="suggestion-list">
+      <button class="suggestion-chip" onclick="setSuggestion(this.textContent)">
+        Le livre avec l'ID 1 existe-t-il ?
+      </button>
+      <button class="suggestion-chip" onclick="setSuggestion(this.textContent)">
+        Les Misérables est-il disponible ?
+      </button>
+      <button class="suggestion-chip" onclick="setSuggestion(this.textContent)">
+        Je cherche un livre de Victor Hugo
+      </button>
+      <button class="suggestion-chip" onclick="setSuggestion(this.textContent)">
+        Recommande-moi un roman romantique
+      </button>
+      <button class="suggestion-chip" onclick="setSuggestion(this.textContent)">
+        Quels livres d'informatique avez-vous ?
+      </button>
+      <button class="suggestion-chip" onclick="setSuggestion(this.textContent)">
+        Combien de livres sont disponibles ?
+      </button>
+      <button class="suggestion-chip" onclick="setSuggestion(this.textContent)">
+        Montre-moi tous les livres empruntés
+      </button>
+      <button class="suggestion-chip" onclick="setSuggestion(this.textContent)">
+        Quel auteur a le plus de livres ?
+      </button>
+    </div>
+
+    <div class="panel-divider"></div>
+
+    <h3 class="panel-title"><i data-lucide="info"></i> À propos du chatbot</h3>
+    <div class="panel-info">
+      <p>Le chatbot utilise <strong>Google Gemini 2.5 Flash</strong> et consulte en temps réel la base de données de la
+        bibliothèque.</p>
+
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/chatbot.js') }}"></script>
+{% endblock %}

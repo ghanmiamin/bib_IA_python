@@ -1,0 +1,271 @@
+{% extends "base.html" %}
+{% block title %}Catalogue — Bibliothèque Intelligente{% endblock %}
+
+{% block content %}
+<!-- ─── HEADER ─── -->
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Catalogue des Livres</h1>
+    <p class="page-sub">Gérez votre collection de livres</p>
+  </div>
+  <button class="btn btn-primary" onclick="openModal('modal-add')">
+    <i data-lucide="plus"></i> Ajouter un livre
+  </button>
+</div>
+
+<!-- ─── STATS CARDS ─── -->
+<div class="stats-grid">
+  <div class="stat-card stat-total">
+    <div class="stat-icon"><i data-lucide="library-big"></i></div>
+    <div class="stat-body">
+      <div class="stat-value" id="stat-total">{{ stats.total }}</div>
+      <div class="stat-label">Livres total</div>
+    </div>
+  </div>
+  <div class="stat-card stat-dispo">
+    <div class="stat-icon"><i data-lucide="check-circle"></i></div>
+    <div class="stat-body">
+      <div class="stat-value" id="stat-dispo">{{ stats.disponibles }}</div>
+      <div class="stat-label">Disponibles</div>
+    </div>
+  </div>
+  <div class="stat-card stat-emprunte">
+    <div class="stat-icon"><i data-lucide="clock"></i></div>
+    <div class="stat-body">
+      <div class="stat-value" id="stat-emprunte">{{ stats.empruntes }}</div>
+      <div class="stat-label">Empruntés</div>
+    </div>
+  </div>
+  <div class="stat-card stat-reserve">
+    <div class="stat-icon"><i data-lucide="bookmark"></i></div>
+    <div class="stat-body">
+      <div class="stat-value" id="stat-reserve">{{ stats.reserves }}</div>
+      <div class="stat-label">Réservés</div>
+    </div>
+  </div>
+  <div class="stat-card stat-auteur">
+    <div class="stat-icon"><i data-lucide="users"></i></div>
+    <div class="stat-body">
+      <div class="stat-value" id="stat-auteurs">{{ stats.auteurs }}</div>
+      <div class="stat-label">Auteurs</div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── SEARCH BAR ─── -->
+<div class="search-bar">
+  <div class="search-input-wrap">
+    <i data-lucide="search" class="search-icon"></i>
+    <input type="text" id="search-input" class="search-input"
+      placeholder="Rechercher par titre, auteur, catégorie ou ID…" value="{{ terme or '' }}" />
+    <button class="search-clear" id="btn-clear" onclick="clearSearch()" style="display:none">
+      <i data-lucide="x"></i>
+    </button>
+  </div>
+</div>
+
+<!-- ─── TABLE ─── -->
+<div class="table-card">
+  <div class="table-header">
+    <span id="table-count" class="table-count">{{ livres|length }} livre(s)</span>
+    <div class="table-filters">
+      <button class="filter-btn active" data-filter="tous" onclick="filterStatut(this,'tous')">Tous</button>
+      <button class="filter-btn" data-filter="disponible" onclick="filterStatut(this,'disponible')">✅
+        Disponibles</button>
+      <button class="filter-btn" data-filter="emprunté" onclick="filterStatut(this,'emprunté')">📤 Empruntés</button>
+      <button class="filter-btn" data-filter="réservé" onclick="filterStatut(this,'réservé')">🔖 Réservés</button>
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <table class="books-table" id="books-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Titre</th>
+          <th>Auteur</th>
+          <th>Catégorie</th>
+          <th>Année</th>
+          <th>Qté</th>
+          <th>Statut</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="books-tbody">
+        {% for l in livres %}
+        <tr data-statut="{{ l.statut }}" data-id="{{ l.id_livre }}">
+          <td><span class="id-badge">#{{ l.id_livre }}</span></td>
+          <td><strong>{{ l.titre }}</strong></td>
+          <td>{{ l.auteur }}</td>
+          <td><span class="cat-badge">{{ l.categorie }}</span></td>
+          <td>{{ l.annee_publication }}</td>
+          <td>{{ l.quantite_disponible }}</td>
+          <td>
+            {% if l.statut == 'disponible' %}
+            <span class="statut-badge statut-dispo">disponible</span>
+            {% elif l.statut == 'emprunté' %}
+            <span class="statut-badge statut-emprunte">emprunté</span>
+            {% else %}
+            <span class="statut-badge statut-reserve"> réservé</span>
+            {% endif %}
+          </td>
+          <td>
+            <div class="action-btns">
+              <button class="btn-icon btn-edit" title="Modifier" onclick="openEdit({{ l.id_livre }})">
+                <i data-lucide="pencil"></i>
+              </button>
+              <button class="btn-icon btn-delete" title="Supprimer"
+                onclick="confirmDelete({{ l.id_livre }}, '{{ l.titre|replace("'","\'") }}')">
+                <i data-lucide="trash-2"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="8" class="empty-row">📭 Aucun livre trouvé</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════
+     MODAL — AJOUTER
+════════════════════════════════════════ -->
+<div id="modal-add" class="modal-overlay" onclick="closeOnOverlay(event,'modal-add')">
+  <div class="modal">
+    <div class="modal-header">
+      <h2><i data-lucide="plus-circle"></i> Ajouter un livre</h2>
+      <button class="modal-close" onclick="closeModal('modal-add')"><i data-lucide="x"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Titre <span class="req">*</span></label>
+          <input type="text" id="add-titre" class="form-input" placeholder="Ex : Le Petit Prince" />
+        </div>
+        <div class="form-group">
+          <label>Auteur <span class="req">*</span></label>
+          <input type="text" id="add-auteur" class="form-input" placeholder="Ex : Antoine de Saint-Exupéry" />
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Catégorie <span class="req">*</span></label>
+          <input type="text" id="add-categorie" class="form-input" placeholder="Roman, Informatique…" />
+        </div>
+        <div class="form-group">
+          <label>Année de publication</label>
+          <input type="number" id="add-annee" class="form-input" placeholder="2024" min="1000" max="2099" />
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Quantité disponible</label>
+          <input type="number" id="add-quantite" class="form-input" value="1" min="0" />
+        </div>
+        <div class="form-group">
+          <label>Statut</label>
+          <select id="add-statut" class="form-input">
+            <option value="disponible">Disponible</option>
+            <option value="emprunté">Emprunté</option>
+            <option value="réservé"> Réservé</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-add')">Annuler</button>
+      <button class="btn btn-primary" onclick="submitAdd()">
+        <i data-lucide="save"></i> Enregistrer
+      </button>
+    </div>
+  </div>
+</div>
+
+
+
+<div id="modal-edit" class="modal-overlay" onclick="closeOnOverlay(event,'modal-edit')">
+  <div class="modal">
+    <div class="modal-header">
+      <h2><i data-lucide="pencil"></i> Modifier le livre</h2>
+      <button class="modal-close" onclick="closeModal('modal-edit')"><i data-lucide="x"></i></button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="edit-id" />
+      <div class="form-row">
+        <div class="form-group">
+          <label>Titre <span class="req">*</span></label>
+          <input type="text" id="edit-titre" class="form-input" />
+        </div>
+        <div class="form-group">
+          <label>Auteur <span class="req">*</span></label>
+          <input type="text" id="edit-auteur" class="form-input" />
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Catégorie</label>
+          <input type="text" id="edit-categorie" class="form-input" />
+        </div>
+        <div class="form-group">
+          <label>Année</label>
+          <input type="number" id="edit-annee" class="form-input" min="1000" max="2099" />
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Quantité</label>
+          <input type="number" id="edit-quantite" class="form-input" min="0" />
+        </div>
+        <div class="form-group">
+          <label>Statut</label>
+          <select id="edit-statut" class="form-input">
+            <option value="disponible"> Disponible</option>
+            <option value="emprunté"> Emprunté</option>
+            <option value="réservé"> Réservé</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-edit')">Annuler</button>
+      <button class="btn btn-primary" onclick="submitEdit()">
+        <i data-lucide="save"></i> Mettre à jour
+      </button>
+    </div>
+  </div>
+</div>
+
+
+
+<div id="modal-delete" class="modal-overlay" onclick="closeOnOverlay(event,'modal-delete')">
+  <div class="modal modal-sm">
+    <div class="modal-header modal-danger">
+      <h2><i data-lucide="trash-2"></i> Supprimer le livre</h2>
+      <button class="modal-close" onclick="closeModal('modal-delete')"><i data-lucide="x"></i></button>
+    </div>
+    <div class="modal-body">
+      <p class="delete-message">Voulez-vous vraiment supprimer :</p>
+      <p class="delete-title" id="delete-livre-titre">—</p>
+      <p class="delete-warning">⚠ Cette action est irréversible.</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-delete')">Annuler</button>
+      <button class="btn btn-danger" id="btn-confirm-delete" onclick="submitDelete()">
+        <i data-lucide="trash-2"></i> Supprimer
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast notification -->
+<div id="app-toast" class="app-toast"></div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/catalogue.js') }}"></script>
+{% endblock %}
